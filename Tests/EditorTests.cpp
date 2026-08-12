@@ -11,6 +11,11 @@
 #include <array>
 #include <iterator>
 
+struct EditorTestAccess
+{
+    static void refresh(NailCombAudioProcessorEditor& editor) { editor.timerCallback(); }
+};
+
 namespace
 {
 void checkSharedChromePaint(juce::AudioProcessorEditor& editor)
@@ -130,10 +135,11 @@ bool valuesDiffer(float a, float b)
     return std::abs(a - b) > 0.0001f;
 }
 
-void dispatchEditorTimer()
+void dispatchEditorTimer(juce::AudioProcessorEditor& editor)
 {
-    juce::Thread::sleep(40);
-    juce::Timer::callPendingTimersSynchronously();
+    auto* custom = dynamic_cast<NailCombAudioProcessorEditor*>(&editor);
+    test_support::check(custom != nullptr, "custom editor is available for display refresh");
+    EditorTestAccess::refresh(*custom);
 }
 
 void checkDisplayValuesTrackSliders(juce::AudioProcessorEditor& editor)
@@ -145,7 +151,7 @@ void checkDisplayValuesTrackSliders(juce::AudioProcessorEditor& editor)
     auto* voiceSpread = dynamic_cast<juce::Slider*>(editor.findChildWithID("nailcomb-voiceSpread"));
     test_support::check(frequency != nullptr && feedback != nullptr && crossCouple != nullptr && voiceSpread != nullptr, "display source sliders exist");
 
-    dispatchEditorTimer();
+    dispatchEditorTimer(editor);
     const std::array<float, 4> expected {
         normalizedSliderValue(*frequency),
         normalizedSliderValue(*feedback),
@@ -156,7 +162,7 @@ void checkDisplayValuesTrackSliders(juce::AudioProcessorEditor& editor)
 
     const auto before = display.getValues();
     crossCouple->setValue(crossCouple->getMaximum(), juce::dontSendNotification);
-    dispatchEditorTimer();
+    dispatchEditorTimer(editor);
     test_support::check(valuesDiffer(display.getValues()[2], before[2]), "changing cross-couple slider updates display value");
 }
 } // namespace
