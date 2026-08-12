@@ -16,10 +16,11 @@ void checkSimpleHeaderOnlyPaint(juce::AudioProcessorEditor& editor)
 {
     const auto background = ehl::juce_design::Palette::ink();
     const auto divider = ehl::juce_design::Palette::low();
-
     juce::Image image(juce::Image::RGB, editor.getWidth(), editor.getHeight(), true);
-    juce::Graphics g(image);
-    editor.paint(g);
+    {
+        juce::Graphics g(image);
+        editor.paint(g);
+    }
 
     bool headerHasInk = false;
     bool middleBandIsBackground = true;
