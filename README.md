@@ -71,5 +71,5 @@ artifacts/plugin-release/windows-x64/ARTIFACTS.txt
 
 - `nailcomb_dsp_tests`: deterministic comb timing, polarity, damping, stereo detune, feedback bounds, finite rendering, reset, and non-finite sanitization.
 - `nailcomb_plugin_tests`: identity, APVTS state, parameter presence, matched mono/stereo bus policy, finite processing, and tail/latency contracts.
-- `nailcomb_editor_tests`: custom editor, all parameter controls, tooltips, accessibility names, and the shared EHL module header/divider/plain-body contract.
+- `nailcomb_editor_tests`: custom editor, all parameter controls, tooltips, accessibility names, the shared EHL parameter display, and rotary control layout.
 - `nailcomb_artifact_contract`: staged VST3/Standalone/AU artifact paths and macOS codesign checks.

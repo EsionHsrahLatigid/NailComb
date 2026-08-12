@@ -39,6 +39,9 @@ NailCombAudioProcessorEditor::NailCombAudioProcessorEditor(NailCombAudioProcesso
     setWantsKeyboardFocus(true);
     setLookAndFeel(&lookAndFeel);
 
+    parameterDisplay.setComponentID("nailcomb-parameter-display");
+    addAndMakeVisible(parameterDisplay);
+
     for (std::size_t i = 0; i < controls.size(); ++i)
     {
         auto& slider = sliders[i];
@@ -67,10 +70,13 @@ NailCombAudioProcessorEditor::NailCombAudioProcessorEditor(NailCombAudioProcesso
     }
 
     setSize(defaultWidth, defaultHeight);
+    timerCallback();
+    startTimerHz(30);
 }
 
 NailCombAudioProcessorEditor::~NailCombAudioProcessorEditor()
 {
+    stopTimer();
     setLookAndFeel(nullptr);
     for (auto& label : labels)
         label.setLookAndFeel(nullptr);
@@ -85,7 +91,19 @@ void NailCombAudioProcessorEditor::paint(juce::Graphics& g)
 
 void NailCombAudioProcessorEditor::resized()
 {
+    parameterDisplay.setBounds(ehl::juce_design::parameterDisplayArea(getLocalBounds()));
+
     for (std::size_t i = 0; i < sliders.size(); ++i)
         ehl::juce_design::layoutLabelledControl(labels[i], sliders[i],
                                                 ehl::juce_design::controlCell(getLocalBounds(), i));
+}
+
+void NailCombAudioProcessorEditor::timerCallback()
+{
+    parameterDisplay.setValues({
+        static_cast<float>(sliders[0].valueToProportionOfLength(sliders[0].getValue())),
+        static_cast<float>(sliders[2].valueToProportionOfLength(sliders[2].getValue())),
+        static_cast<float>(sliders[7].valueToProportionOfLength(sliders[7].getValue())),
+        static_cast<float>(sliders[8].valueToProportionOfLength(sliders[8].getValue())),
+    });
 }

@@ -8,14 +8,16 @@
 #include <juce_events/juce_events.h>
 
 #include <algorithm>
+#include <array>
 #include <iterator>
 
 namespace
 {
-void checkSimpleHeaderOnlyPaint(juce::AudioProcessorEditor& editor)
+void checkSharedChromePaint(juce::AudioProcessorEditor& editor)
 {
     const auto background = ehl::juce_design::Palette::ink();
     const auto divider = ehl::juce_design::Palette::low();
+    const auto paper = ehl::juce_design::Palette::paper();
     juce::Image image(juce::Image::RGB, editor.getWidth(), editor.getHeight(), true);
     {
         juce::Graphics g(image);
@@ -23,9 +25,9 @@ void checkSimpleHeaderOnlyPaint(juce::AudioProcessorEditor& editor)
     }
 
     bool headerHasInk = false;
-    bool middleBandIsBackground = true;
     bool dividerIsExact = true;
     bool bodyIsBackground = true;
+    bool topStripIsPaper = true;
     bool neutral = true;
 
     for (int y = 0; y < image.getHeight(); ++y)
@@ -39,10 +41,10 @@ void checkSimpleHeaderOnlyPaint(juce::AudioProcessorEditor& editor)
             const auto maxChannel = std::max({ pixel.getRed(), pixel.getGreen(), pixel.getBlue() });
             neutral = neutral && static_cast<int>(maxChannel) - static_cast<int>(minChannel) <= 4;
 
-            if (y < 48)
-                headerHasInk = headerHasInk || pixel != background;
+            if (y < 4)
+                topStripIsPaper = topStripIsPaper && pixel == paper;
             else if (y < ehl::juce_design::Metrics::dividerY)
-                middleBandIsBackground = middleBandIsBackground && pixel == background;
+                headerHasInk = headerHasInk || pixel != background;
             else if (y == ehl::juce_design::Metrics::dividerY)
             {
                 const bool onDivider = x >= ehl::juce_design::Metrics::margin
@@ -54,11 +56,11 @@ void checkSimpleHeaderOnlyPaint(juce::AudioProcessorEditor& editor)
         }
     }
 
-    test_support::check(image.getPixelAt(0, 0) == background, "paint background is #050505");
-    test_support::check(headerHasInk, "paint keeps product identity above y=48");
-    test_support::check(middleBandIsBackground, "paint keeps y=48..55 empty before the divider");
-    test_support::check(dividerIsExact, "paint draws the shared divider at y=56 from x=16 through width-17");
-    test_support::check(bodyIsBackground, "paint draws no decorative motif, grid, panel, meter, or visualizer at y>=64");
+    test_support::check(topStripIsPaper, "paint draws shared paper top strip at y=0..3");
+    test_support::check(image.getPixelAt(0, 4) == background, "paint background is ink below top strip");
+    test_support::check(headerHasInk, "paint keeps product identity above the divider");
+    test_support::check(dividerIsExact, "paint draws the shared divider at y=60 from x=16 through width-17");
+    test_support::check(bodyIsBackground, "editor paint draws no direct body content below shared chrome");
     test_support::check(neutral, "paint stays in the neutral monochrome ramp");
 }
 
@@ -76,7 +78,8 @@ void checkControlContract(juce::AudioProcessorEditor& editor, const char* parame
     test_support::check(control->getY() >= ehl::juce_design::Metrics::headerHeight, "control starts at or below y=64: " + id.toStdString());
     test_support::check(control->getRight() <= editor.getWidth(), "control fits editor width: " + id.toStdString());
     test_support::check(control->getBottom() <= editor.getHeight(), "control fits editor height: " + id.toStdString());
-    test_support::check(control->getSliderStyle() == juce::Slider::LinearHorizontal, "control uses shared slider style: " + id.toStdString());
+    test_support::check(control->getSliderStyle() == juce::Slider::RotaryHorizontalVerticalDrag, "control uses shared rotary style: " + id.toStdString());
+    test_support::check(control->getTextBoxPosition() == juce::Slider::TextBoxBelow, "control uses shared value placement: " + id.toStdString());
     test_support::check(control->getTextBoxWidth() == ehl::juce_design::Metrics::valueWidth, "control uses shared value width: " + id.toStdString());
     test_support::check(control->findColour(juce::Slider::thumbColourId) == ehl::juce_design::Palette::paper(), "control uses shared paper thumb: " + id.toStdString());
     test_support::check(control->findColour(juce::Slider::trackColourId) == ehl::juce_design::Palette::mid(), "control uses shared mid track: " + id.toStdString());
@@ -100,6 +103,61 @@ void checkAllControlContracts(juce::AudioProcessorEditor& editor)
     };
     for (std::size_t i = 0; i < std::size(ids); ++i)
         checkControlContract(editor, ids[i], i);
+}
+
+ehl::juce_design::ParameterDisplay& checkParameterDisplay(juce::AudioProcessorEditor& editor)
+{
+    auto* display = dynamic_cast<ehl::juce_design::ParameterDisplay*>(editor.findChildWithID("nailcomb-parameter-display"));
+    test_support::check(display != nullptr, "parameter display exists");
+    test_support::check(display->getKind() == ehl::juce_design::DisplayKind::comb, "parameter display kind is comb");
+    test_support::check(display->getBounds() == ehl::juce_design::parameterDisplayArea(editor.getLocalBounds()), "parameter display uses shared bounds");
+    test_support::check(! display->getWantsKeyboardFocus(), "parameter display is noninteractive");
+
+    bool interceptsSelf = true;
+    bool interceptsChildren = true;
+    display->getInterceptsMouseClicks(interceptsSelf, interceptsChildren);
+    test_support::check(! interceptsSelf && ! interceptsChildren, "parameter display ignores mouse clicks");
+    return *display;
+}
+
+float normalizedSliderValue(juce::Slider& slider)
+{
+    return static_cast<float>(slider.valueToProportionOfLength(slider.getValue()));
+}
+
+bool valuesDiffer(float a, float b)
+{
+    return std::abs(a - b) > 0.0001f;
+}
+
+void dispatchEditorTimer()
+{
+    juce::Thread::sleep(40);
+    juce::Timer::callPendingTimersSynchronously();
+}
+
+void checkDisplayValuesTrackSliders(juce::AudioProcessorEditor& editor)
+{
+    auto& display = checkParameterDisplay(editor);
+    auto* frequency = dynamic_cast<juce::Slider*>(editor.findChildWithID("nailcomb-frequency"));
+    auto* feedback = dynamic_cast<juce::Slider*>(editor.findChildWithID("nailcomb-feedback"));
+    auto* crossCouple = dynamic_cast<juce::Slider*>(editor.findChildWithID("nailcomb-crossCouple"));
+    auto* voiceSpread = dynamic_cast<juce::Slider*>(editor.findChildWithID("nailcomb-voiceSpread"));
+    test_support::check(frequency != nullptr && feedback != nullptr && crossCouple != nullptr && voiceSpread != nullptr, "display source sliders exist");
+
+    dispatchEditorTimer();
+    const std::array<float, 4> expected {
+        normalizedSliderValue(*frequency),
+        normalizedSliderValue(*feedback),
+        normalizedSliderValue(*crossCouple),
+        normalizedSliderValue(*voiceSpread),
+    };
+    test_support::check(display.getValues() == expected, "parameter display values mirror attached sliders");
+
+    const auto before = display.getValues();
+    crossCouple->setValue(crossCouple->getMaximum(), juce::dontSendNotification);
+    dispatchEditorTimer();
+    test_support::check(valuesDiffer(display.getValues()[2], before[2]), "changing cross-couple slider updates display value");
 }
 } // namespace
 
@@ -144,11 +202,19 @@ int main()
         }
 
         editor->setBounds(0, 0, ehl::juce_design::Metrics::defaultWidth, ehl::juce_design::Metrics::defaultHeight);
+        checkParameterDisplay(*editor);
         checkAllControlContracts(*editor);
-        checkSimpleHeaderOnlyPaint(*editor);
+        checkDisplayValuesTrackSliders(*editor);
+        checkSharedChromePaint(*editor);
 
         editor->setBounds(0, 0, ehl::juce_design::Metrics::minimumWidth, ehl::juce_design::Metrics::minimumHeight);
+        checkParameterDisplay(*editor);
         checkAllControlContracts(*editor);
-        checkSimpleHeaderOnlyPaint(*editor);
+        checkSharedChromePaint(*editor);
+
+        editor->setBounds(0, 0, ehl::juce_design::Metrics::maximumWidth, ehl::juce_design::Metrics::maximumHeight);
+        checkParameterDisplay(*editor);
+        checkAllControlContracts(*editor);
+        checkSharedChromePaint(*editor);
     });
 }

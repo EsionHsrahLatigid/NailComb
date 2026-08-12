@@ -8,7 +8,8 @@
 
 class NailCombAudioProcessor;
 
-class NailCombAudioProcessorEditor final : public juce::AudioProcessorEditor
+class NailCombAudioProcessorEditor final : public juce::AudioProcessorEditor,
+                                           private juce::Timer
 {
 public:
     explicit NailCombAudioProcessorEditor(NailCombAudioProcessor&);
@@ -24,10 +25,13 @@ public:
     static constexpr int minimumHeight = ehl::juce_design::Metrics::minimumHeight;
 
 private:
+    void timerCallback() override;
+
     NailCombAudioProcessor& ownerProcessor;
     juce::TooltipWindow tooltipWindow { this, 700 };
     juce::String tooltipText;
     ehl::juce_design::LookAndFeel lookAndFeel;
+    ehl::juce_design::ParameterDisplay parameterDisplay { ehl::juce_design::DisplayKind::comb };
     std::array<juce::Slider, 11> sliders;
     std::array<juce::Label, 11> labels;
     std::array<std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>, 11> attachments;
