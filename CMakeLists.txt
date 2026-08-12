@@ -45,6 +45,7 @@ if(NAILCOMB_BUILD_PLUGIN)
             GIT_SHALLOW FALSE)
         FetchContent_MakeAvailable(JUCE)
     endif()
+    add_subdirectory(modules/juce-ehl-design-module)
 
     set(NAILCOMB_FORMATS VST3 Standalone)
     if(APPLE)
@@ -84,6 +85,7 @@ if(NAILCOMB_BUILD_PLUGIN)
     target_link_libraries(NailComb
         PRIVATE
             nailcomb_dsp
+            EHL::JuceDesign
             juce::juce_audio_utils
             juce::juce_dsp
         PUBLIC
@@ -154,7 +156,7 @@ if(NAILCOMB_BUILD_PLUGIN)
 
         add_executable(nailcomb_editor_tests Tests/EditorTests.cpp)
         target_include_directories(nailcomb_editor_tests PRIVATE Source)
-        target_link_libraries(nailcomb_editor_tests PRIVATE NailComb juce::juce_audio_utils)
+        target_link_libraries(nailcomb_editor_tests PRIVATE NailComb EHL::JuceDesign juce::juce_audio_utils)
         add_test(NAME nailcomb_editor_tests COMMAND nailcomb_editor_tests)
 
         add_test(
