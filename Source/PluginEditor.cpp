@@ -30,7 +30,6 @@ NailCombAudioProcessorEditor::NailCombAudioProcessorEditor(NailCombAudioProcesso
     : AudioProcessorEditor(&p), ownerProcessor(p),
       tooltipText("NailComb: four fractional feedback comb voices with polarity, damping, stereo detune, cross-coupling, mix, and trim.")
 {
-    setSize(defaultWidth, defaultHeight);
     setResizeLimits(minimumWidth, minimumHeight, defaultWidth * 2, defaultHeight * 2);
     setResizable(true, true);
     setName("NailComb editor");
@@ -48,18 +47,26 @@ NailCombAudioProcessorEditor::NailCombAudioProcessorEditor(NailCombAudioProcesso
         slider.setComponentID(juce::String("nailcomb-") + controls[i].id);
         slider.setTooltip(controls[i].tip);
         slider.setWantsKeyboardFocus(true);
+        slider.setColour(juce::Slider::trackColourId, juce::Colour(0xff8a8a86));
+        slider.setColour(juce::Slider::backgroundColourId, juce::Colour(0xff2a2a2a));
+        slider.setColour(juce::Slider::thumbColourId, juce::Colour(0xfff2f2f0));
+        slider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xfff2f2f0));
+        slider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff050505));
+        slider.setColour(juce::Slider::textBoxOutlineColourId, juce::Colour(0xff8a8a86));
         addAndMakeVisible(slider);
 
         auto& label = labels[i];
         label.setText(controls[i].name, juce::dontSendNotification);
         label.setJustificationType(juce::Justification::centredLeft);
-        label.setColour(juce::Label::textColourId, juce::Colour(0xffeeeeee));
+        label.setColour(juce::Label::textColourId, juce::Colour(0xfff2f2f0));
         label.setTooltip(controls[i].tip);
         label.attachToComponent(&slider, true);
         addAndMakeVisible(label);
 
         attachments[i] = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(ownerProcessor.parameters, controls[i].id, slider);
     }
+
+    setSize(defaultWidth, defaultHeight);
 }
 
 void NailCombAudioProcessorEditor::paint(juce::Graphics& g)
@@ -67,68 +74,36 @@ void NailCombAudioProcessorEditor::paint(juce::Graphics& g)
     const auto area = getLocalBounds();
     g.fillAll(juce::Colour(0xff050505));
 
-    const auto grid = 8;
-    g.setColour(juce::Colour(0xff202020));
-    for (int x = 0; x < area.getWidth(); x += grid)
-        g.drawVerticalLine(x, 0.0f, static_cast<float>(area.getHeight()));
-    for (int y = 0; y < area.getHeight(); y += grid)
-        g.drawHorizontalLine(y, 0.0f, static_cast<float>(area.getWidth()));
+    g.setColour(juce::Colour(0xfff2f2f0));
+    g.setFont(juce::FontOptions(24.0f, juce::Font::bold));
+    g.drawText("NailComb", 32, 16, area.getWidth() - 64, 32, juce::Justification::centredLeft);
 
-    const auto frequency = ownerProcessor.parameters.getRawParameterValue(nailcomb::parameters::frequency)->load();
-    const auto feedback = ownerProcessor.parameters.getRawParameterValue(nailcomb::parameters::feedback)->load();
-    const auto damping = ownerProcessor.parameters.getRawParameterValue(nailcomb::parameters::damping)->load();
-    const auto detune = ownerProcessor.parameters.getRawParameterValue(nailcomb::parameters::stereoDetune)->load();
-    const auto spread = ownerProcessor.parameters.getRawParameterValue(nailcomb::parameters::voiceSpread)->load();
-    const auto mix = ownerProcessor.parameters.getRawParameterValue(nailcomb::parameters::mix)->load();
+    g.setColour(juce::Colour(0xff8a8a86));
+    g.setFont(juce::FontOptions(12.0f));
+    g.drawText("COMB FILTER", 32, 48, area.getWidth() - 64, 16, juce::Justification::centredLeft);
 
-    g.setColour(juce::Colour(0xffe8e8e8));
-    g.setFont(juce::FontOptions(32.0f, juce::Font::bold));
-    g.drawText("NailComb", 32, 24, area.getWidth() - 64, 48, juce::Justification::centredLeft);
-    g.setFont(juce::FontOptions(16.0f));
-    g.drawText("jp.ehl.nailcomb / NlCb", 34, 74, area.getWidth() - 68, 24, juce::Justification::centredLeft);
-
-    const int motifLeft = 32;
-    const int motifTop = 108;
-    const int motifWidth = area.getWidth() - 64;
-    const float normalizedFrequency = juce::jlimit(0.0f, 1.0f, (frequency - 20.0f) / (5000.0f - 20.0f));
-    const float values[] {
-        normalizedFrequency,
-        feedback / nailcomb::dsp::NailCombDSP::maximumFeedback,
-        damping,
-        (detune + 50.0f) / 100.0f,
-        spread,
-        mix
-    };
-    for (int i = 0; i < 6; ++i)
-    {
-        const int y = motifTop + i * 20;
-        const int filled = static_cast<int>(static_cast<float>(motifWidth) * values[i]);
-        g.setColour(juce::Colour(i % 2 == 0 ? 0xffd6d6d6 : 0xff8a8a8a));
-        for (int x = 0; x < filled; x += 16)
-            g.fillRect(motifLeft + x, y, 8, 10);
-        g.setColour(juce::Colour(0xff404040));
-        g.drawRect(motifLeft, y, motifWidth, 10, 1);
-    }
-
-    g.setColour(juce::Colour(0xfff2f2f2));
-    for (int x = 32; x < area.getWidth() - 32; x += 24)
-    {
-        const int h = 20 + ((x / 24) % 11) * 10;
-        const int toothTop = area.getHeight() - 40 - h;
-        g.fillRect(x, toothTop, 8, h);
-        g.fillRect(x - 4, toothTop - 8, 16, 8);
-    }
+    g.setColour(juce::Colour(0xff2a2a2a));
+    g.drawHorizontalLine(72, 32.0f, static_cast<float>(area.getWidth() - 32));
 }
 
 void NailCombAudioProcessorEditor::resized()
 {
     auto area = getLocalBounds().reduced(32);
-    area.removeFromTop(192);
-    const int rowHeight = 28;
-    const int gap = 8;
-    for (auto& slider : sliders)
+    area.removeFromTop(48);
+
+    const int rows = 6;
+    const int columns = 2;
+    const int rowHeight = area.getHeight() / rows;
+    const int colWidth = area.getWidth() / columns;
+
+    for (std::size_t i = 0; i < sliders.size(); ++i)
     {
-        slider.setBounds(area.removeFromTop(rowHeight).withTrimmedLeft(132));
-        area.removeFromTop(gap);
+        const int row = static_cast<int>(i) % rows;
+        const int column = static_cast<int>(i) / rows;
+        auto cell = juce::Rectangle<int>(area.getX() + column * colWidth,
+                                         area.getY() + row * rowHeight,
+                                         colWidth,
+                                         rowHeight).reduced(8, 8);
+        sliders[i].setBounds(cell.withTrimmedLeft(132));
     }
 }
