@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(NailComb VERSION 0.1.0 LANGUAGES C CXX)
+project(NailComb VERSION 0.1.1 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -73,7 +73,7 @@ if(NAILCOMB_BUILD_PLUGIN)
         COMPANY_NAME "EsionHsrahLatigid"
         BUNDLE_ID "jp.ehl.nailcomb"
         PRODUCT_NAME "NailComb"
-        DESCRIPTION "four-voice digital harsh-noise feedback comb filter"
+        DESCRIPTION "tuned four-voice comb resonator"
         PLUGIN_MANUFACTURER_CODE EHL_
         PLUGIN_CODE NlCb
         FORMATS ${NAILCOMB_FORMATS}

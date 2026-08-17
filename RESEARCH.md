@@ -1,14 +1,15 @@
 # NailComb Research And Decision Map
 
-NailComb implements the DHN9 comb-filter product from the G001 identity plan.
+NailComb is a tuned comb-filter product built around four fractional feedback
+voices, polarity control, damping, stereo detune, and bounded cross-coupling.
 
 ## Sources
 
 - Julius O. Smith, PASP comb filters: supports feedforward/feedback comb behavior and the resonant spectral teeth created by delay feedback.
 - Julius O. Smith, PASP fractional delay and delay interpolation: supports fractional delay-line tuning instead of integer-only pitch steps.
 - William M. Hartmann AES flanging/phasing context: supports the perceptual role of polarity, notches, and comb-like coloration.
-- DHN9 G001 evidence: fixes the product identity, four fractional feedback comb voices, polarity, damping, stereo detune, cross-coupling, and strict sub-unity feedback constraints.
-- DHN9 G002 foundation evidence: fixes the CMake/JUCE scaffold, artifact contract, custom editor requirement, and local deterministic test surfaces.
+- Product and DSP source evidence: fixes the product identity, four fractional feedback comb voices, polarity, damping, stereo detune, cross-coupling, and strict sub-unity feedback constraints.
+- JUCE project evidence: fixes the CMake/JUCE scaffold, artifact contract, custom editor requirement, and local deterministic test surfaces.
 
 ## Product Interpretation
 

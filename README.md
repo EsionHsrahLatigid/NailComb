@@ -1,6 +1,6 @@
 # NailComb
 
-NailComb is an EsionHsrahLatigid Digital Harsh Noise comb-filter effect. It uses four preallocated fractional feedback comb voices per channel for a tuned resonant teeth-bank sound: fierce, metallic, polarity-sensitive, and bounded below unity.
+NailComb is a tuned four-voice comb resonator with fractional delay interpolation, polarity-selectable feedback, damping, stereo detune, and bounded cross-coupling.
 
 ## Identity
 
@@ -28,7 +28,7 @@ NailComb is an EsionHsrahLatigid Digital Harsh Noise comb-filter effect. It uses
 
 ## Source Decisions
 
-The comb core follows Julius O. Smith's PASP comb-filter and fractional-delay material: tuned delay loops create the resonant peak/notch train, while fractional interpolation keeps pitch control continuous. Hartmann's flanging/phasing context supports the polarity and moving-comb coloration choices. The DHN9 G001 plan adds the product constraints: four voices, pitch/frequency control, feedback polarity, damping, stereo detune, cross-coupling, and strict sub-unity feedback.
+The comb core follows Julius O. Smith's PASP comb-filter and fractional-delay material: tuned delay loops create the resonant peak/notch train, while fractional interpolation keeps pitch control continuous. Hartmann's flanging/phasing context supports the polarity and moving-comb coloration choices. NailComb's implementation fixes the product constraints directly in code: four voices, pitch/frequency control, feedback polarity, damping, stereo detune, cross-coupling, and strict sub-unity feedback.
 
 Implementation mapping:
 
